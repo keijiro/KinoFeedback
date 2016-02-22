@@ -4,6 +4,8 @@
     {
         _MainTex("Texture", 2D) = "white"{}
         _Color("Color", Color) = (1, 1, 1, 1)
+        _Offset("Offset", Vector) = (0, 0, 0, 0)
+        _Scale("Scale", Vector) = (1, 1, 1, 1)
     }
     SubShader
     {
@@ -31,20 +33,15 @@
             sampler2D _MainTex;
             float4 _MainTex_ST;
             half4 _Color;
+            float2 _Offset;
+            float2 _Scale;
 
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
                 float2 uv = o.vertex.xy / o.vertex.w;
-
-                float r = 0.1 * sin(_Time.y * 0.93);
-                float2x2 m = {
-                    cos(r), -sin(r),
-                    sin(r), cos(r)
-                };
-                uv = mul(m, uv);
-                o.uv = (uv * (0.8 - 0.2 * sin(_Time.y * 1.13)) + 1) * 0.5;
+                o.uv = (uv * _Scale + 1) * 0.5 + _Offset;
                 return o;
             }
 

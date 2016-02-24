@@ -123,10 +123,11 @@ namespace Kino
             get {
                 if (_delayBuffer == null) {
                     var cam = targetCamera;
-                    _delayBuffer = RenderTexture.GetTemporary(
+                    _delayBuffer = new RenderTexture(
                         cam.pixelWidth, cam.pixelHeight,
                         0, RenderTextureFormat.DefaultHDR
                     );
+                    _delayBuffer.hideFlags = HideFlags.DontSave;
                 }
                 return _delayBuffer;
             }
@@ -140,8 +141,10 @@ namespace Kino
                 if (_feedbackCommand == null) {
                     _feedbackCommand = new CommandBuffer();
                     _feedbackCommand.name = "Kino.Feedback";
-                    targetCamera.AddCommandBuffer(
-                        CameraEvent.BeforeImageEffects, _feedbackCommand
+                    _feedbackCommand.Blit(
+                        delayBuffer as Texture,
+                        BuiltinRenderTextureType.CameraTarget,
+                        feedbackMaterial, 0
                     );
                 }
                 return _feedbackCommand;
@@ -150,15 +153,31 @@ namespace Kino
 
         CommandBuffer _feedbackCommand;
 
-        // initialization flag
-        bool _initialized;
+        // 2d rotation matrix
+        Vector4 rotationMatrixAsVector {
+            get {
+                var angle = -Mathf.Deg2Rad * _rotation;
+                var sin = Mathf.Sin(angle);
+                var cos = Mathf.Cos(angle);
+                return new Vector4(cos, sin, -sin, cos);
+            }
+        }
 
         #endregion
 
         #region MonoBehaviour Functions
 
+        void OnEnable()
+        {
+            // add the feedback command to the target camera
+            targetCamera.AddCommandBuffer(
+                CameraEvent.BeforeImageEffects, feedbackCommand
+            );
+        }
+
         void OnDisable()
         {
+            // destroy all the resources
             if (_feedbackCommand != null) {
                 targetCamera.RemoveCommandBuffer(
                     CameraEvent.BeforeImageEffects, _feedbackCommand
@@ -168,7 +187,8 @@ namespace Kino
             _feedbackCommand = null;
 
             if (_delayBuffer != null) {
-                RenderTexture.ReleaseTemporary(_delayBuffer);
+                _delayBuffer.Release();
+                DestroyImmediate(_delayBuffer);
             }
 
             _delayBuffer = null;
@@ -182,28 +202,23 @@ namespace Kino
 
         void Update()
         {
-            if (!_initialized)
+            // recreate the delay buffer on screen size change
+            var cam = targetCamera;
+
+            if (cam.pixelWidth != _delayBuffer.width ||
+                cam.pixelHeight != _delayBuffer.height)
             {
-                feedbackCommand.Blit(
-                    delayBuffer as Texture,
-                    BuiltinRenderTextureType.CameraTarget,
-                    feedbackMaterial, 0
-                );
-                _initialized = true;
+                _delayBuffer.Release();
+                _delayBuffer.width = cam.pixelWidth;
+                _delayBuffer.height = cam.pixelHeight;
             }
 
+            // update properties
             var m = feedbackMaterial;
+
             m.SetColor("_Color", _color);
-
-            var offset = new Vector2(_offsetX, _offsetY) * -0.05f;
-            m.SetVector("_Offset", offset);
-
-            var angle = -Mathf.Deg2Rad * _rotation;
-            var sin = Mathf.Sin(angle);
-            var cos = Mathf.Cos(angle);
-            var rotation = new Vector4(cos, sin, -sin, cos);
-            m.SetVector("_Rotation", rotation);
-
+            m.SetVector("_Offset", new Vector2(_offsetX, _offsetY) * -0.05f);
+            m.SetVector("_Rotation", rotationMatrixAsVector);
             m.SetFloat("_Scale", 2 - _scale);
 
             delayBuffer.filterMode =

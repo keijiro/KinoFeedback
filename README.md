@@ -3,8 +3,18 @@ KinoFeedback
 
 Oldskool frame buffer feedback effect for Unity
 
-![gif](http://49.media.tumblr.com/ea2fa90708675da8d76d8f0a6037e0cb/tumblr_o321kkmYGe1qio469o2_400.gif)
-![gif](http://49.media.tumblr.com/b469f77d326410a3ae1d5806d115c128/tumblr_o30c8kCX151qio469o1_400.gif)
+![gif][gif1] ![gif][gif2]
+
+How to use
+----------
+
+- Import [the package file][package] into your project
+- Add Feedback script to a camera object
+- Start the play mode. Tweak the perameters as you like.
+
+The Feedback script transfers the content of the previous frame to the current
+frame with the least priority (the maximum depth value). You can tweak color,
+offset, scale and rotation applied in transferring.
 
 License
 -------
@@ -27,3 +37,7 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[gif1]: http://49.media.tumblr.com/ea2fa90708675da8d76d8f0a6037e0cb/tumblr_o321kkmYGe1qio469o2_400.gif
+[gif2]: http://49.media.tumblr.com/b469f77d326410a3ae1d5806d115c128/tumblr_o30c8kCX151qio469o1_400.gif
+[package]: https://github.com/keijiro/KinoFeedback/blob/master/KinoFeedback.unitypackage

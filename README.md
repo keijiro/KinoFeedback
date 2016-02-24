@@ -4,7 +4,7 @@ KinoFeedback
 Oldskool frame buffer feedback effect for Unity
 
 ![gif](http://49.media.tumblr.com/ea2fa90708675da8d76d8f0a6037e0cb/tumblr_o321kkmYGe1qio469o2_400.gif)
-![gif](http://45.media.tumblr.com/15f82e3edbdb2f13881800b1602544b6/tumblr_o321kkmYGe1qio469o1_400.gif)
+![gif](http://49.media.tumblr.com/b469f77d326410a3ae1d5806d115c128/tumblr_o30c8kCX151qio469o1_400.gif)
 
 License
 -------

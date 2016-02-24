@@ -1363,13 +1363,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2927f4208f6748dd9027a947ae4982c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _jaggies: 1
-  _color: {r: .956368923, g: .959195614, b: .977941155, a: 1}
-  _offsetX: .239999995
+  _color: {r: 1, g: .911764681, b: .997565925, a: 1}
+  _offsetX: .200000003
   _offsetY: 0
-  _rotation: 1.29999995
+  _rotation: 0
   _scale: 1
-  _shader: {fileID: 4800000, guid: 921d021726e634a57b57ecd4e8d9ae94, type: 3}
+  _jaggies: 1
+  _feedbackShader: {fileID: 4800000, guid: 921d021726e634a57b57ecd4e8d9ae94, type: 3}
 --- !u!1 &1498701327
 GameObject:
   m_ObjectHideFlags: 0

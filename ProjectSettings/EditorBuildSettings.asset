@@ -6,4 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Test/Test.unity
+    path: Assets/Test/Ethan.unity
+  - enabled: 1
+    path: Assets/Test/Nyan.unity

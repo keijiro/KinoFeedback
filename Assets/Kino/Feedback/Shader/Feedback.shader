@@ -25,7 +25,8 @@ Shader "Hidden/Kino/Feedback"
 {
     Properties
     {
-        _MainTex("Texture", 2D) = "white"{}
+        _MainTex("", 2D) = "white"{}
+        _Color("", Color) = (1, 1, 1)
     }
 
     CGINCLUDE

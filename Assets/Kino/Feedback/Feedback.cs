@@ -167,20 +167,12 @@ namespace Kino
 
         #region MonoBehaviour Functions
 
-        void OnEnable()
-        {
-            // add the feedback command to the target camera
-            targetCamera.AddCommandBuffer(
-                CameraEvent.BeforeImageEffects, feedbackCommand
-            );
-        }
-
         void OnDisable()
         {
             // destroy all the resources
             if (_feedbackCommand != null) {
                 targetCamera.RemoveCommandBuffer(
-                    CameraEvent.BeforeImageEffects, _feedbackCommand
+                    CameraEvent.BeforeForwardAlpha, _feedbackCommand
                 );
             }
 
@@ -202,7 +194,15 @@ namespace Kino
 
         void Update()
         {
-            // recreate the delay buffer on screen size change
+            // do nothing if the delay buffer is not ready
+            if (_delayBuffer == null) return;
+
+            // lazy initialization of the feedback command
+            if (_feedbackCommand == null) targetCamera.AddCommandBuffer(
+                CameraEvent.BeforeForwardAlpha, feedbackCommand
+            );
+
+            // reinitialize the delay buffer on screen size change
             var cam = targetCamera;
 
             if (cam.pixelWidth != _delayBuffer.width ||

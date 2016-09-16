@@ -90,68 +90,10 @@ namespace Kino
 
         #region Private members
 
-        // feedback shader reference
-        Shader feedbackShader {
-            get {
-                const string name = "Hidden/Kino/Feedback";
-                return _feedbackShader ? _feedbackShader : Shader.Find(name);
-            }
-        }
+        [SerializeField] Shader _shader;
 
-        [SerializeField] Shader _feedbackShader;
-
-        // material used for feedback
-        Material feedbackMaterial {
-            get {
-                if (_feedbackMaterial == null) {
-                    _feedbackMaterial = new Material(feedbackShader);
-                    _feedbackMaterial.hideFlags = HideFlags.DontSave;
-                }
-                return _feedbackMaterial;
-            }
-        }
-
-        Material _feedbackMaterial;
-
-        // effect target camera
-        Camera targetCamera {
-            get { return GetComponent<Camera>(); }
-        }
-
-        // render texture for storing previous frame
-        RenderTexture delayBuffer {
-            get {
-                if (_delayBuffer == null) {
-                    var cam = targetCamera;
-                    _delayBuffer = new RenderTexture(
-                        cam.pixelWidth, cam.pixelHeight,
-                        0, RenderTextureFormat.DefaultHDR
-                    );
-                    _delayBuffer.hideFlags = HideFlags.DontSave;
-                }
-                return _delayBuffer;
-            }
-        }
-
+        Material _material;
         RenderTexture _delayBuffer;
-
-        // command buffer for feedback blitting
-        CommandBuffer feedbackCommand {
-            get {
-                if (_feedbackCommand == null) {
-                    _feedbackCommand = new CommandBuffer();
-                    _feedbackCommand.name = "Kino.Feedback";
-                    _feedbackCommand.Blit(
-                        delayBuffer as Texture,
-                        BuiltinRenderTextureType.CameraTarget,
-                        feedbackMaterial, 0
-                    );
-                }
-                return _feedbackCommand;
-            }
-        }
-
-        CommandBuffer _feedbackCommand;
 
         // 2d rotation matrix
         Vector4 rotationMatrixAsVector {
@@ -165,70 +107,55 @@ namespace Kino
 
         #endregion
 
-        #region MonoBehaviour Functions
+        #region MonoBehaviour functions
 
-        void OnDisable()
+        void OnEnable()
         {
-            // destroy all the resources
-            if (_feedbackCommand != null) {
-                targetCamera.RemoveCommandBuffer(
-                    CameraEvent.BeforeForwardAlpha, _feedbackCommand
-                );
-            }
-
-            _feedbackCommand = null;
-
-            if (_delayBuffer != null) {
-                _delayBuffer.Release();
-                DestroyImmediate(_delayBuffer);
-            }
-
-            _delayBuffer = null;
-
-            if (_feedbackMaterial != null) {
-                DestroyImmediate(_feedbackMaterial);
-            }
-
-            _feedbackMaterial = null;
+            GetComponent<Camera>().depthTextureMode |= DepthTextureMode.Depth;
         }
 
-        void Update()
+        void OnDestroy()
         {
-            // do nothing if the delay buffer is not ready
-            if (_delayBuffer == null) return;
+            if (_delayBuffer != null)
+                RenderTexture.ReleaseTemporary(_delayBuffer);
 
-            // lazy initialization of the feedback command
-            if (_feedbackCommand == null) targetCamera.AddCommandBuffer(
-                CameraEvent.BeforeForwardAlpha, feedbackCommand
-            );
-
-            // reinitialize the delay buffer on screen size change
-            var cam = targetCamera;
-
-            if (cam.pixelWidth != _delayBuffer.width ||
-                cam.pixelHeight != _delayBuffer.height)
-            {
-                _delayBuffer.Release();
-                _delayBuffer.width = cam.pixelWidth;
-                _delayBuffer.height = cam.pixelHeight;
-            }
-
-            // update properties
-            var m = feedbackMaterial;
-
-            m.SetColor("_Color", _color);
-            m.SetVector("_Offset", new Vector2(_offsetX, _offsetY) * -0.05f);
-            m.SetVector("_Rotation", rotationMatrixAsVector);
-            m.SetFloat("_Scale", 2 - _scale);
-
-            delayBuffer.filterMode =
-                _jaggies ? FilterMode.Point : FilterMode.Bilinear;
+            if (_material != null)
+                if (Application.isPlaying)
+                    Destroy(_material);
+                else
+                    DestroyImmediate(_material);
         }
 
         void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            Graphics.Blit(source, delayBuffer);
-            Graphics.Blit(source, destination);
+            // Lazy initialization of the postprocessing material
+            if (_material == null) {
+                _material = new Material(Shader.Find("Hidden/Kino/Feedback"));
+                _material.hideFlags = HideFlags.HideAndDontSave;
+            }
+
+            // Feedback from the previous frame (note: this could be null).
+            if (_delayBuffer != null)
+                _delayBuffer.filterMode = _jaggies ? FilterMode.Point : FilterMode.Bilinear;
+            _material.SetTexture("_FeedbackTex", _delayBuffer);
+
+            // Filter parameters
+            _material.SetColor("_Color", _color);
+            _material.SetVector("_Offset", new Vector2(_offsetX, _offsetY) * -0.05f);
+            _material.SetVector("_Rotation", rotationMatrixAsVector);
+            _material.SetFloat("_Scale", 2 - _scale);
+
+            // Apply the filter and get the result in a newly allocated RT.
+            var tempRT = RenderTexture.GetTemporary(source.width, source.height);
+            Graphics.Blit(source, tempRT, _material, 0);
+
+            // Replace the delay buffer with the filter result.
+            if (_delayBuffer != null)
+                RenderTexture.ReleaseTemporary(_delayBuffer);
+            _delayBuffer = tempRT;
+
+            // Copy the result to the destination.
+            Graphics.Blit(tempRT, destination);
         }
 
         #endregion

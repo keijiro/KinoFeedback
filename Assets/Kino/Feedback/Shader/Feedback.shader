@@ -43,9 +43,8 @@ Shader "Hidden/Kino/Feedback"
     v2f_img vert_feedback(appdata_img v)
     {
         v2f_img o;
-        float4 pos = mul(UNITY_MATRIX_MVP, v.vertex);
-        pos.z = 1;
-        o.pos = pos;
+        o.pos.xy = v.vertex.xy * float2(2, _ProjectionParams.x < 0 ? -2 : 2);
+        o.pos.zw = 1;
         o.uv = v.texcoord;
         return o;
     }

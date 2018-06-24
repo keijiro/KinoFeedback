@@ -44,7 +44,12 @@ Shader "Hidden/Kino/Feedback"
     {
         v2f_img o;
         o.pos.xy = v.vertex.xy * float2(2, _ProjectionParams.x < 0 ? -2 : 2);
-        o.pos.zw = 1;
+    #ifdef UNITY_REVERSED_Z
+        o.pos.z = 0;
+    #else
+        o.pos.z = 1;
+    #endif
+        o.pos.w = 1;
         o.uv = v.texcoord;
         return o;
     }
